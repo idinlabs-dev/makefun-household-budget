@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeNest — Household Budget</title>
+<style>
+:root{--green:#1f7a4d;--green-d:#145c39;--cream:#f7f3ea;--ink:#22271f;--mut:#6b7280;--card:#ffffff;--line:#e5e0d3;--red:#c0392b;--amber:#b7791f;--blue:#2563eb}
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,serif;background:var(--cream);color:var(--ink)}
+header{background:var(--green);color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:26px}
+header p{margin:2px 0 0;opacity:.9;font-size:14px}
+.month{font-size:15px;background:#ffffff22;border:1px solid #ffffff55;border-radius:999px;padding:6px 14px}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;gap:4px;padding:8px 12px;overflow-x:auto;position:sticky;top:0;z-index:5}
+nav button{border:1px solid transparent;background:none;font:inherit;font-size:15px;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--green);color:#fff}
+main{max-width:1020px;margin:0 auto;padding:18px 14px 60px}
+section{display:none}
+section.on{display:block}
+h2{font-size:22px;margin:4px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h3{margin:0 0 6px;font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.big{font-size:30px;font-weight:bold}
+.sub{font-size:13px;color:var(--mut)}
+.up{color:var(--green)}
+.down{color:var(--red)}
+.bar{height:10px;background:#eee;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--green)}
+.bar i.warn{background:var(--amber)}
+.bar i.over{background:var(--red)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.pill{display:inline-block;font-size:12px;background:#eef6ef;border:1px solid #cfe3d2;color:var(--green-d);border-radius:99px;padding:2px 9px}
+.pill.exp{background:#fdeceb;border-color:#f5c6c0;color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-size:12px;text-transform:uppercase}
+td.num,th.num{text-align:right}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--green);color:#fff;border:0;border-radius:9px;padding:9px 16px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:5px 10px;font-size:13px}
+input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;width:100%}
+form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;margin:12px 0;align-items:end}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:4px}
+.search{max-width:340px;margin-bottom:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.goal{font-size:15px}
+.tip{background:#fff8e1;border:1px solid #f0d98c;border-radius:12px;padding:14px;margin:12px 0}
+footer{color:var(--mut);font-size:13px;text-align:center;padding:20px}
+@media (max-width:700px){
+  .grid{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  form{grid-template-columns:1fr 1fr}
+  header h1{font-size:21px}
+  .big{font-size:25px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🏡 HomeNest</h1><p>Your household budget, calm and under control.</p></div>
+  <div class="month">November 2026 · Family of four</div>
+</header>
+<nav id="nav">
+  <button class="on" data-sec="dash">Dashboard</button>
+  <button data-sec="tx">Transactions</button>
+  <button data-sec="cats">Categories &amp; Budgets</button>
+  <button data-sec="goals">Savings Goals</button>
+  <button data-sec="bills">Bills &amp; Recurring</button>
+  <button data-sec="reports">Reports</button>
+</nav>
+<main>
+<section id="dash" class="on">
+  <h2>November at a glance</h2>
+  <div class="grid">
+    <div class="card"><h3>Balance</h3><div class="big" id="bal">$0</div><div class="sub">Across checking + cash</div></div>
+    <div class="card"><h3>Income this month</h3><div class="big up" id="inc">$0</div><div class="sub" id="incSub"></div></div>
+    <div class="card"><h3>Spending this month</h3><div class="big down" id="exp">$0</div><div class="sub" id="expSub"></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Monthly budget — all categories</h3><div id="budgetSum"></div></div>
+  <div class="two" style="margin-top:12px">
+    <div class="card"><h3>Biggest category so far</h3><div id="topCat"></div></div>
+    <div class="card"><h3>Budget health</h3><div id="health"></div></div>
+  </div>
+  <div class="tip" id="tip"></div>
+  <div class="card"><h3>Recent activity</h3><div id="recent"></div></div>
+</section>
+
+<section id="tx">
+  <h2>Transactions</h2>
+  <input class="search" id="q" type="search" placeholder="Search description or category…" oninput="renderTx()">
+  <form id="txForm" onsubmit="addTx(event)">
+    <div><label>Description</label><input id="fDesc" required placeholder="e.g. Weekly groceries"></div>
+    <div><label>Amount ($)</label><input id="fAmt" type="number" step="0.01" min="0.01" required placeholder="42.50"></div>
+    <div><label>Type</label><select id="fType"><option value="expense">Expense</option><option value="income">Income</option></select></div>
+    <div><label>Category</label><select id="fCat"></select></div>
+    <button class="btn" type="submit">Add</button>
+  </form>
+  <div class="card"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th><th></th></tr></thead><tbody id="txBody"></tbody></table></div>
+</section>
+
+<section id="cats">
+  <h2>Categories &amp; Budgets</h2>
+  <p class="sub">Monthly limits you set yourself. Green is on track, amber is close, red is over.</p>
+  <div id="catList"></div>
+</section>
+
+<section id="goals">
+  <h2>Savings Goals</h2>
+  <div class="grid" id="goalList"></div>
+  <div class="card" style="margin-top:12px"><h3>Add to a goal</h3>
+    <form id="goalForm" onsubmit="addToGoal(event)">
+      <div><label>Goal</label><select id="gPick"></select></div>
+      <div><label>Amount ($)</label><input id="gAmt" type="number" step="1" min="1" required></div>
+      <button class="btn" type="submit">Save it</button>
+    </form>
+  </div>
+</section>
+
+<section id="bills">
+  <h2>Bills &amp; Recurring</h2>
+  <p class="sub">Everything that comes out on its own — so nothing surprises you.</p>
+  <div class="card"><div id="billList"></div></div>
+  <div class="card" style="margin-top:12px"><h3>This month</h3><div id="billSum"></div></div>
+</section>
+
+<section id="reports">
+  <h2>Reports</h2>
+  <div class="grid">
+    <div class="card"><h3>Top spending</h3><div id="repTop"></div></div>
+    <div class="card"><h3>Income vs spending</h3><div id="repVs"></div></div>
+    <div class="card"><h3>Daily average</h3><div class="big" id="repAvg">$0</div><div class="sub">spending per day in November</div></div>
+  </div>
+  <div class="tip" id="insights"></div>
+  <button class="btn" onclick="downloadCSV()">⬇ Download transactions as CSV</button>
+  <button class="btn ghost" onclick="resetAll()">Reset demo data</button>
+</section>
+</main>
+<footer>HomeNest · Your data never leaves this browser — it is stored in localStorage on your device.</footer>
+<script>
+const CATS=["Groceries","Housing","Transport","Utilities","Dining out","Kids","Health","Fun"];
+const BUDGETS={Groceries:600,Housing:1450,Transport:280,Utilities:210,"Dining out":180,Kids:240,Health:150,Fun:120};
+const SEED=[
+["2026-11-24","Weekly groceries — market","Groceries",86.40,"expense"],
+["2026-11-23","Salary — Maya","Housing",0,"income"],
+["2026-11-23","Electricity bill","Utilities",96.20,"expense"],
+["2026-11-22","School lunch money","Kids",45.00,"expense"],
+["2026-11-21","Pizza night","Dining out",38.50,"expense"],
+["2026-11-20","Fuel — family car","Transport",52.00,"expense"],
+["2026-11-19","Pharmacy","Health",27.80,"expense"],
+["2026-11-18","Groceries — supermarket","Groceries",124.30,"expense"],
+["2026-11-17","Rent","Housing",1450.00,"expense"],
+["2026-11-15","Movie night","Fun",32.00,"expense"],
+["2026-11-14","Bus passes","Transport",48.00,"expense"],
+["2026-11-13","Freelance — design job","Fun",0,"income"],
+["2026-11-12","Internet + phone","Utilities",89.00,"expense"],
+["2026-11-10","Groceries — market","Groceries",71.90,"expense"],
+["2026-11-08","Kids' shoes","Kids",64.00,"expense"],
+["2026-11-06","Coffee with friends","Dining out",18.40,"expense"],
+["2026-11-04","Salary — Daniel","Housing",0,"income"],
+["2026-11-03","Water bill","Utilities",41.50,"expense"],
+["2026-11-01","Groceries — bulk buy","Groceries",158.20,"expense"]];
+const SEED_AMT={"Salary — Maya":3400,"Freelance — design job":420,"Salary — Daniel":3650};
+const GOALS0=[{name:"Emergency fund",saved:1850,target:3000,note:"3 months of essentials"},{name:"Summer holiday",saved:640,target:1800,note:"Beach trip in July"},{name:"New washing machine",saved:210,target:550,note:"The old one leaks"}];
+const BILLS=[
+["Rent",1450,"1st of month","Paid Nov 1"],
+["Electricity",96,"23rd","Paid Nov 23"],
+["Internet + phone",89,"12th","Paid Nov 12"],
+["Water",42,"3rd","Paid Nov 3"],
+["Car insurance",118,"15th","Due Nov 15 — paid"],
+["Music streaming",11,"7th","Due Nov 7 — paid"],
+["Gym membership",35,"20th","Due Nov 20 — paid"]];
+const KEY="homenest-v1";
+let state=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.tx)return s}catch(e){}return{tx:SEED.map((r,i)=>({id:i+1,date:r[0],desc:r[1],cat:r[2],amt:r[3]===0?(SEED_AMT[r[1]]||0):r[3],type:r[4]})),goals:JSON.parse(JSON.stringify(GOALS0))}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function money(n){return "$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{showSec(b.dataset.sec);history.replaceState(null,"","#"+b.dataset.sec)});
+function showSec(id){document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("on",x.dataset.sec===id));document.querySelectorAll("main section").forEach(s=>s.classList.toggle("on",s.id===id))}
+const _h=(location.hash||"").slice(1);if(["dash","tx","cats","goals","bills","reports"].includes(_h))showSec(_h);
+const catSel=document.getElementById("fCat");CATS.forEach(c=>{const o=document.createElement("option");o.textContent=c;catSel.appendChild(o)});
+const gPick=document.getElementById("gPick");state.goals.forEach(g=>{const o=document.createElement("option");o.textContent=g.name;gPick.appendChild(o)});
+function totals(){let inc=0,exp=0;state.tx.forEach(t=>{if(t.type==="income")inc+=t.amt;else exp+=t.amt});return{inc,exp,bal:inc-exp}}
+function renderAll(){renderDash();renderTx();renderCats();renderGoals();renderBills();renderReports()}
+function renderDash(){const t=totals();document.getElementById("bal").textContent=money(t.bal);document.getElementById("inc").textContent=money(t.inc);document.getElementById("exp").textContent=money(t.exp);
+document.getElementById("incSub").textContent=state.tx.filter(x=>x.type==="income").length+" paydays this month";
+document.getElementById("expSub").textContent=state.tx.filter(x=>x.type==="expense").length+" purchases this month";
+const by={};state.tx.filter(x=>x.type==="expense").forEach(x=>by[x.cat]=(by[x.cat]||0)+x.amt);
+const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];
+document.getElementById("topCat").innerHTML=top?"<div class='big'>"+esc(top[0])+"</div><div class='sub'>"+money(top[1])+" — "+Math.round(top[1]/t.exp*100)+"% of spending</div>":"—";
+const over=CATS.filter(c=>(by[c]||0)>BUDGETS[c]).length;
+const totLim=CATS.reduce((s,c)=>s+BUDGETS[c],0);
+document.getElementById("budgetSum").innerHTML="<div class='row'><span>Total budgeted</span><b>"+money(totLim)+"</b></div><div class='row'><span>Total spent</span><b class='down'>"+money(t.exp)+"</b></div><div class='row'><span>Still to spend</span><b class='up'>"+money(Math.max(0,totLim-t.exp))+"</b></div><div class='bar'><i class='"+(t.exp>totLim?"over":"")+"' style='width:"+Math.min(100,Math.round(t.exp/totLim*100))+"%'></i></div><div class='sub'>"+Math.round(t.exp/totLim*100)+"% of the month's budget used</div>";
+document.getElementById("health").innerHTML=over===0?"<div class='big up'>All on track ✓</div><div class='sub'>No category over its monthly limit</div>":"<div class='big down'>"+over+" over budget</div><div class='sub'>Check the Categories tab</div>";
+const left=BUDGETS.Groceries-(by.Groceries||0);
+document.getElementById("tip").innerHTML="<b>💡 Tip:</b> You have <b>"+money(Math.max(0,left))+"</b> left in Groceries for the last week of November. A market run instead of a supermarket run usually saves about $15.";
+document.getElementById("recent").innerHTML=state.tx.slice(0,5).map(t=>"<div class='row'><span>"+esc(t.date)+" · "+esc(t.desc)+"</span><b class='"+(t.type==="income"?"up":"down")+"'>"+(t.type==="income"?"+":"−")+money(t.amt)+"</b></div>").join("")}
+function renderTx(){const q=(document.getElementById("q").value||"").toLowerCase();
+const list=state.tx.filter(t=>!q||t.desc.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
+document.getElementById("txBody").innerHTML=list.map(t=>"<tr><td>"+esc(t.date)+"</td><td>"+esc(t.desc)+"</td><td><span class='pill"+(t.type==="expense"?" exp":"")+"'>"+esc(t.cat)+"</span></td><td class='num "+(t.type==="income"?"up":"down")+"'>"+(t.type==="income"?"+":"−")+money(t.amt)+"</td><td><button class='btn ghost small' onclick='editTx("+t.id+")'>Edit</button> <button class='btn ghost small' onclick='delTx("+t.id+")'>Delete</button></td></tr>").join("")||"<tr><td colspan='5'>No transactions match your search.</td></tr>"}
+let editingId=null;
+function editTx(id){const t=state.tx.find(x=>x.id===id);if(!t)return;editingId=id;
+document.getElementById("fDesc").value=t.desc;document.getElementById("fAmt").value=t.amt.toFixed(2);
+document.getElementById("fType").value=t.type;document.getElementById("fCat").value=t.cat;
+document.querySelector("#txForm button[type=submit]").textContent="Save changes";
+document.getElementById("fDesc").focus();window.scrollTo(0,document.getElementById("txForm").offsetTop)}
+function addTx(e){e.preventDefault();const desc=document.getElementById("fDesc").value.trim();const amt=parseFloat(document.getElementById("fAmt").value);if(!desc||!(amt>0))return;
+if(editingId!==null){const t=state.tx.find(x=>x.id===editingId);if(t){t.desc=desc;t.amt=amt;t.type=document.getElementById("fType").value;t.cat=document.getElementById("fCat").value}editingId=null;document.querySelector("#txForm button[type=submit]").textContent="Add"}
+else{state.tx.unshift({id:Date.now(),date:new Date().toISOString().slice(0,10),desc,cat:document.getElementById("fCat").value,amt,type:document.getElementById("fType").value})}save();e.target.reset();renderAll()}
+function delTx(id){state.tx=state.tx.filter(t=>t.id!==id);save();renderAll()}
+function renderCats(){document.getElementById("catList").innerHTML=CATS.map(c=>{const spent=state.tx.filter(t=>t.type==="expense"&&t.cat===c).reduce((s,t)=>s+t.amt,0);const lim=BUDGETS[c];const pct=Math.min(100,Math.round(spent/lim*100));const cls=spent>lim?"over":pct>80?"warn":"";
+return "<div class='card' style='margin-bottom:10px'><div class='row' style='border:0;padding:0'><b>"+esc(c)+"</b><span>"+money(spent)+" of "+money(lim)+"</span></div><div class='bar'><i class='"+cls+"' style='width:"+pct+"%'></i></div><div class='sub'>"+pct+"% used · "+money(Math.max(0,lim-spent))+" left</div></div>"}).join("")}
+function renderGoals(){document.getElementById("goalList").innerHTML=state.goals.map(g=>{const pct=Math.min(100,Math.round(g.saved/g.target*100));return "<div class='card goal'><h3>"+esc(g.name)+"</h3><div class='big'>"+money(g.saved)+"</div><div class='sub'>of "+money(g.target)+" · "+esc(g.note)+"</div><div class='bar'><i style='width:"+pct+"%'></i></div><div class='sub'>"+pct+"% there — "+money(g.target-g.saved)+" to go</div></div>"}).join("")}
+function addToGoal(e){e.preventDefault();const amt=parseFloat(document.getElementById("gAmt").value);const g=state.goals.find(x=>x.name===document.getElementById("gPick").value);if(g&&amt>0){g.saved+=amt;save();e.target.reset();renderAll()}}
+function renderBills(){document.getElementById("billList").innerHTML=BILLS.map(b=>"<div class='row'><span><b>"+esc(b[0])+"</b> <span class='sub'>· "+esc(b[2])+"</span></span><span>"+money(b[1])+" · "+esc(b[3])+"</span></div>").join("");
+const sum=BILLS.reduce((s,b)=>s+b[1],0);document.getElementById("billSum").innerHTML="<div class='big'>"+money(sum)+"</div><div class='sub'>total recurring bills each month · "+BILLS.length+" bills tracked</div>"}
+function renderReports(){const by={};state.tx.filter(x=>x.type==="expense").forEach(x=>by[x.cat]=(by[x.cat]||0)+x.amt);
+document.getElementById("repTop").innerHTML=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>"<div class='row'><span>"+esc(e[0])+"</span><b>"+money(e[1])+"</b></div>").join("");
+const t=totals();document.getElementById("repVs").innerHTML="<div class='row'><span>Income</span><b class='up'>"+money(t.inc)+"</b></div><div class='row'><span>Spending</span><b class='down'>"+money(t.exp)+"</b></div><div class='row'><span>Saved</span><b>"+money(t.bal)+" ("+Math.round(t.bal/t.inc*100)+"% of income)</b></div>";
+document.getElementById("repAvg").textContent=money(t.exp/24);
+document.getElementById("insights").innerHTML="<b>📊 What November says:</b> Housing is your biggest cost, as expected — rent alone is "+money(1450)+". Groceries are your most frequent spend. You saved <b>"+Math.round(t.bal/t.inc*100)+"% of income</b> this month, above the 20% rule of thumb. Dining out is small ($57) — the habit that is working."}
+function downloadCSV(){const rows=[["Date","Description","Category","Type","Amount"]].concat(state.tx.map(t=>[t.date,t.desc,t.cat,t.type,t.amt.toFixed(2)]));
+const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="homenest-transactions.csv";a.click();URL.revokeObjectURL(a.href)}
+function resetAll(){if(confirm("Reset HomeNest to the demo data?")){localStorage.removeItem(KEY);state=load();save();renderAll()}}
+renderAll();
+</script>
+</body>
+</html>
